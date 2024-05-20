@@ -19,4 +19,4 @@ timer_deviceD := class(creative_device):
         loop:
             Sleep(10.0) # Check every 10 seconds for demonstration purposes
             NextWeekDate := TimeManagerInstance.GetNextWeek()
-            Print("Next Week - DD-MM-YYYY {NextWeekDate.Day}/{NextWeekDate.Month}/{NextWeekDate.Year} \n {NextWeekDate.Hour}:{NextWeekDate.Minute}:{NextWeekDate.Second}")
+            Print("\n Next Week - DD-MM-YYYY \n {NextWeekDate.Day}/{NextWeekDate.Month}/{NextWeekDate.Year} \n {NextWeekDate.Hour}:{NextWeekDate.Minute}:{NextWeekDate.Second}")
