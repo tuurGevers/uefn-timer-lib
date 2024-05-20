@@ -4,7 +4,7 @@ using { /UnrealEngine.com/Temporary/Diagnostics }
 using { /UnrealEngine.com/Temporary/SpatialMath }
 using { /Verse.org/Simulation/Tags }
 
-NewDate<constructor>(year:int, month:int, day:int, hour:int, minute:int, second:int, dayOfWeek:int):=Date:
+NewDate<constructor>(year:int, month:int, day:int, hour:int, minute:int, second:int, dayOfWeek:int)<transacts>:=Date:
     Year := year
     Month := month
     Day := day
@@ -25,14 +25,9 @@ Date:=class:
     
 TimeManager:=class:
     TimerProp:creative_prop
-    var CurrentYear:int = 2024
-    var CurrentMonth:int = 5
-    var CurrentDay:int = 20
-    var CurrentHour:int = 12
-    var CurrentMinute:int = 0
-    var CurrentSecond:int = 0
-    var CurrentDayOfWeek:int = 1 # 1 = Monday, 7 = Sunday
-    
+    var CurrentDate:Date = Date{Year:=2024, Month:=5, Day:=20, Hour:=12, Minute:=0, Second:=0, DayOfWeek:=1} # 1 = Monday
+
+
     SetDateLoop()<suspends>:void=
         loop:
             # Wait for 1 second
@@ -42,35 +37,78 @@ TimeManager:=class:
             Scale:=Transform.Scale
             Rotation:=Transform.Rotation.GetYawPitchRollDegrees()   
             if:
-                NewYear:=Floor[Translation.X+1836.0]
-                NewMonth:=Floor[Translation.Y-4307.0]
-                NewDay:=Floor[Translation.Z-1000.0]
+                NewYear:=Floor[Translation.X-1156.0]
+                NewMonth:=Floor[Translation.Y-2288.0]
+                NewDay:=Floor[Translation.Z-16.0]
                 NewHour:=Floor[Scale.X]
                 NewMinute:=Floor[Scale.Y]
                 NewSecond:=Floor[Scale.Z]
-                NewDayOfWeek:=Floor[Rotation[0]-19.0]
-                set CurrentYear = NewYear
-                set CurrentMonth = NewMonth
-                set CurrentDay = NewDay
-                set CurrentHour = NewHour
-                set CurrentMinute = NewMinute
-                set CurrentSecond = NewSecond
-                set CurrentDayOfWeek = NewDayOfWeek
+                NewDayOfWeek:=Floor[Rotation[0]+1.0]
+                set CurrentDate = NewDate(NewYear, NewMonth, NewDay, NewHour, NewMinute, NewSecond, NewDayOfWeek)
+                
                 
 
-    PrintCurrentDateTime():void=
-        Print("Year: {CurrentYear} Month: {CurrentMonth} Day: {CurrentDay}\n Hour: {CurrentHour} Minute: {CurrentMinute} Second: {CurrentSecond} DayOfWeek: {CurrentDayOfWeek}")
+(date:Date).PrintCurrentDateTime():void=
+        Print("Year: {date.Year} Month: {date.Month} Day: {date.Day}\n Hour: {date.Hour} Minute: {date.Minute} Second: {date.Second} DayOfWeek: {date.DayOfWeek}")
 
-    GetNextWeek():Date=
-        var newDay:int = CurrentDay + 7
-        var newMonth:int = CurrentMonth
-        var newYear:int = CurrentYear
-        var newDayOfWeek:int = CurrentDayOfWeek + 7
+    
+
+(date:Date).AddTime(S:string, ?Years:int=0, ?Months:int=0, ?Days:int=0, ?Hours:int=0, ?Minutes:int=0, ?Seconds:int=0):Date=
+        var newYear:int = date.Year + Years
+        var newMonth:int = date.Month + Months
+        var newDay:int = date.Day + Days
+        var newHour:int = date.Hour + Hours
+        var newMinute:int = date.Minute + Minutes
+        var newSecond:int = date.Second + Seconds
+        var newDayOfWeek:int = date.DayOfWeek + Days
+
+        # Normalize the date and time
+        loop:
+            if(newSecond < 60):
+                break
+            set newSecond -= 60
+            set newMinute += 1
+        loop:
+            if(newMinute < 60):
+                break
+            set newMinute -= 60
+            set newHour += 1
 
         loop:
-            if(newDay <= DaysInMonth(newMonth, newYear)):
+            if(newHour < 24):
                 break
-            set newDay -= DaysInMonth(newMonth, newYear)
+            set newHour -= 24
+            set newDay += 1
+
+        loop:
+            if(newDay <= date.DaysInMonth()):
+                break
+            set newDay -= date.DaysInMonth()
+            set newMonth += 1
+
+            if (newMonth > 12):
+                set newMonth -= 12
+                set newYear += 1
+
+        loop:
+            if(newDayOfWeek <= 7):
+                break
+            set newDayOfWeek -= 7
+
+        return NewDate(newYear, newMonth, newDay, newHour, newMinute, newSecond, newDayOfWeek)
+
+
+    
+(date:Date).GetNextWeek():Date=
+        var newDay:int = date.Day + 7
+        var newMonth:int = date.Month
+        var newYear:int = date.Year
+        var newDayOfWeek:int = date.DayOfWeek + 7
+
+        loop:
+            if(newDay <= date.DaysInMonth()):
+                break
+            set newDay -= date.DaysInMonth()
             set newMonth += 1
 
             if (newMonth > 12):
@@ -83,20 +121,21 @@ TimeManager:=class:
             set newDayOfWeek -= 7
        
 
-        return NewDate(newYear, newMonth, newDay, CurrentHour, CurrentMinute, CurrentSecond, newDayOfWeek)
+        return NewDate(newYear, newMonth, newDay, date.Hour, date.Minute, date.Second, newDayOfWeek)
 
-    DaysInMonth(month:int, year:int)<transacts>:int=
-        if (month = 2):
-            if (IsLeapYear(year) = true):
+(date:Date).DaysInMonth()<transacts>:int=
+        if (date.Month = 2):
+            if (date.IsLeapYear[]):
                 return 29
             else:
                 return 28
-        else if (array{4, 6, 9, 11}.Find[month]):
+        else if (array{4, 6, 9, 11}.Find[date.Month]):
             return 30
         else:
             return 31
 
-    IsLeapYear(year:int)<transacts>:logic=
-        if (Mod[year,4] = 0 and (Mod[year, 100 ] <> 0 or Mod[year, 400] = 0)):
-            return true
-        return false
+(date:Date).IsLeapYear()<transacts><decides>:void=
+    var IsLeap:logic=false
+    if (Mod[date.Year,4] = 0 and (Mod[date.Year, 100 ] <> 0 or Mod[date.Year, 400] = 0)):
+        set IsLeap = true
+    IsLeap = true
