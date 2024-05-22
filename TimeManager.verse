@@ -140,7 +140,7 @@ TimeManager:=class:
         set IsLeap = true
     IsLeap = true
 
-(date: Date).TimeUntil(target: Date): tuple(int, int, int, int) =
+(date: Date).TimeUntil(target: Date)<transacts>: tuple(int, int, int, int) =
     var currentTimestamp: int = date.ToTimestamp()
     var targetTimestamp: int = target.ToTimestamp()
     var diff: int = targetTimestamp - currentTimestamp
@@ -157,5 +157,24 @@ TimeManager:=class:
                 return (days, hours, minutes, seconds)
     return (0, 0, 0, 0)
 
-(date: Date).ToTimestamp(): int =
+(date: Date).ToTimestamp()<transacts>: int =
     return ((date.Year * 365 + date.Month * 30 + date.Day) * 24 + date.Hour) * 3600 + date.Minute * 60 + date.Second
+
+(date: Date).GenerateDailySeed(): int =
+    return date.Year * 10000 + date.Month * 100 + date.Day
+
+(date: Date).GenerateWeeklySeed(): int =
+    var firstDayOfWeek: Date = date.GetFirstDayOfWeek()
+    return firstDayOfWeek.Year * 10000 + firstDayOfWeek.Month * 100 + firstDayOfWeek.Day
+
+(date: Date).GetFirstDayOfWeek(): Date =
+    var daysToSubtract: int = date.DayOfWeek - 1
+    var firstDayOfWeek: Date = NewDate(date.Year, date.Month, date.Day - daysToSubtract, 0, 0, 0, 1)
+    return firstDayOfWeek
+
+(date: Date).IsMoreThanAWeekSince(startDate: Date)<transacts>: logic =
+    days := startDate.TimeUntil(date)(0)
+    if(days >= 7):
+        return true
+    return false
+

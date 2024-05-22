@@ -9,6 +9,30 @@ using { /Fortnite.com/UI }
 using { /UnrealEngine.com/Temporary/UI }
 
 # Utility Functions #
+SimpleRNG:=class:
+    var seed: int=-1
+    var a: int = 1664525
+    var c: int = 1013904223
+    var m: int = 0
+
+    Init(_seed: int): void =
+        if(set m= Floor[Pow(2.0,32.0)]){}
+        set seed = _seed
+
+    Next()<transacts>: int =
+        if(set seed = Mod[(a * seed + c), m]){}
+        return seed
+
+    SeededIntRange(min: int, max: int)<transacts>: int =
+        if(res:=min + (Mod[Next(), (max - min + 1)])):
+            return res
+        return 0
+
+(Strings:[]string).Join(Delimiter:string)<transacts>:string=
+    var Result:string = ""
+    for(S:Strings):
+        set Result += "{S}{Delimiter}"
+    return Result
 
 # Calculates a point relative to a given transform and distance
 CalculatePointNonPlayer(Transform:transform, DistanceAmp:float, Direction:string):vector3=

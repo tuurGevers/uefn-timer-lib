@@ -15,6 +15,16 @@ timer_deviceD := class(creative_device):
     OnBegin<override>()<suspends>:void=
         var TimeManagerInstance:TimeManager = TimeManager{TimerProp:=TimerProp}
         spawn. TimeManagerInstance.SetDateLoop()
+        Sleep(2.0)
+        # InitQuest(TimeManagerInstance)
+        # spawn. StartDateLoop(TimeManagerInstance)
+        TestItemShop(TimeManagerInstance)
+
+        
+    CompleteQuest():void=
+        Print("Quest Completed")
+        
+    InitQuest(TimeManagerInstance:TimeManager)<suspends>:void=
         if(Player:=GetPlayspace().GetPlayers()[0]):
             TestQuest := QuestGoal{Description:="This is a test", TargetCount:=1}
             TestQuest2 := QuestGoal{Description:="do a dance", TargetCount:=1}
@@ -28,6 +38,7 @@ timer_deviceD := class(creative_device):
             set FirstQuest = option{MyQuest}
             spawn. MyQuest.StartAndAwait(CompleteQuest)
 
+    StartDateLoop(TimeManagerInstance:TimeManager)<suspends>:void=
         loop:
             Sleep(2.0) # Check every 10 seconds for demonstration purposes
             Print("Current Date:")
@@ -61,6 +72,31 @@ timer_deviceD := class(creative_device):
         #     Print("Date After Adding 45 Seconds:")
         #     AddedTimeDate6.PrintCurrentDateTime()
 
-    CompleteQuest():void=
-        Print("Quest Completed")
+    TestItemShop(TimeManagerInstance:TimeManager):void=
+        var itemShop: ItemShop = ItemShop{timeManager:=TimeManagerInstance}
+        itemShop.Init(TimeManagerInstance)
+
+        for(Player:GetPlayspace().GetPlayers()):
+            itemShop.InitUI(Player)
+        spawn. UiUpdateLoop(itemShop)
+
+        # Assume currentDate is an instance of Date with the current date and time
+        var currentDate: Date = TimeManagerInstance.CurrentDate
+
+        var dailySeed: int = currentDate.GenerateDailySeed()
+        var weeklySeed: int = currentDate.GenerateWeeklySeed()
+
+        var dailyItems: []string = itemShop.FetchDailyItems(dailySeed)
+        var weeklyItems: []string = itemShop.FetchWeeklyItems(weeklySeed)
+
+        # Print the fetched items for demonstration
         
+        Print("Daily Items: {dailyItems.Join(", ")}")
+        Print("Weekly Items: {weeklyItems.Join(", ")}")
+
+    UiUpdateLoop(itemShop:ItemShop)<suspends>:void=
+        loop:
+            Sleep(5.0)
+            itemShop.UpdateDailyItems()
+            itemShop.UpdateWeeklyItems(false)
+            
