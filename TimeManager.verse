@@ -37,13 +37,13 @@ TimeManager:=class:
             Scale:=Transform.Scale
             Rotation:=Transform.Rotation.GetYawPitchRollDegrees()   
             if:
-                NewYear:=Floor[Translation.X-1156.0]
-                NewMonth:=Floor[Translation.Y-2288.0]
-                NewDay:=Floor[Translation.Z-16.0]
+                NewYear:=Floor[Translation.X]
+                NewMonth:=Floor[Translation.Y]
+                NewDay:=Floor[Translation.Z]
                 NewHour:=Floor[Scale.X]
                 NewMinute:=Floor[Scale.Y]
                 NewSecond:=Floor[Scale.Z]
-                NewDayOfWeek:=Floor[Rotation[0]+1.0]
+                NewDayOfWeek:=Floor[Rotation[0]]
                 set CurrentDate = NewDate(NewYear, NewMonth, NewDay, NewHour, NewMinute, NewSecond, NewDayOfWeek)
                 
                 
@@ -139,3 +139,23 @@ TimeManager:=class:
     if (Mod[date.Year,4] = 0 and (Mod[date.Year, 100 ] <> 0 or Mod[date.Year, 400] = 0)):
         set IsLeap = true
     IsLeap = true
+
+(date: Date).TimeUntil(target: Date): tuple(int, int, int, int) =
+    var currentTimestamp: int = date.ToTimestamp()
+    var targetTimestamp: int = target.ToTimestamp()
+    var diff: int = targetTimestamp - currentTimestamp
+
+    if(var days: int = Floor(diff / (24 * 3600))):
+        set diff -= days * 24 * 3600
+
+        if(var hours: int = Floor(diff / 3600)):
+            set diff -= hours * 3600
+
+            if(var minutes: int = Floor(diff / 60)):
+                var seconds: int = diff - (minutes * 60)
+
+                return (days, hours, minutes, seconds)
+    return (0, 0, 0, 0)
+
+(date: Date).ToTimestamp(): int =
+    return ((date.Year * 365 + date.Month * 30 + date.Day) * 24 + date.Hour) * 3600 + date.Minute * 60 + date.Second
