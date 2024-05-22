@@ -16,8 +16,8 @@ timer_deviceD := class(creative_device):
         var TimeManagerInstance:TimeManager = TimeManager{TimerProp:=TimerProp}
         spawn. TimeManagerInstance.SetDateLoop()
         Sleep(2.0)
-        # InitQuest(TimeManagerInstance)
-        # spawn. StartDateLoop(TimeManagerInstance)
+        InitQuest(TimeManagerInstance)
+        spawn. StartDateLoop(TimeManagerInstance)
         TestItemShop(TimeManagerInstance)
 
         

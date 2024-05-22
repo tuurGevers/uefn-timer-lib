@@ -130,6 +130,11 @@ ItemShopUI := class:
         Self.CreateUI()
     
     CreateUI(): void =
+        Button:= button_regular{
+            DefaultText := SetText("Close")
+            }
+
+        Button.OnClick().Subscribe(CloseUI)
         set Canvas =
             canvas: 
                 Slots := array:
@@ -164,6 +169,8 @@ ItemShopUI := class:
                                                     Widget := Self.CreateWeeklyItemsUI()
                                                 stack_box_slot:
                                                     Widget := WeeklyCountdownText
+                                                stack_box_slot:
+                                                    Widget :=Button
 
     CreateDailyItemsUI(): stack_box =
         var Slots: []stack_box_slot = array{}
@@ -205,6 +212,9 @@ ItemShopUI := class:
     RemoveUI(): void =
         if (PlayerUI := GetPlayerUI[player[Player]]):
             PlayerUI.RemoveWidget(Canvas)
+
+    CloseUI(m:widget_message): void =
+        RemoveUI()
 
 GetItemImage(itemName: string): texture =
     # Implement a method to return the correct texture based on the item name
